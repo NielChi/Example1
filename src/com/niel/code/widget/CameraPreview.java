@@ -6,63 +6,58 @@ import android.content.Context;
 import android.hardware.Camera;
 import android.util.AttributeSet;
 import android.view.SurfaceHolder;
+import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
 
-public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
+public class CameraPreview extends SurfaceView {
 	private SurfaceHolder mHolder = null;
 	private Camera mCamera = null;
 
 	public CameraPreview(Context context) {
 		super(context);
-		
-		mHolder = getHolder();
-		mHolder.addCallback(this);
-		mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 	}
 	
 	public CameraPreview(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		
-		mHolder = getHolder();
-		mHolder.addCallback(this);
-		mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 	}
 	
 	public CameraPreview(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
-		
-		mHolder = getHolder();
-		mHolder.addCallback(this);
-		mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 	}
-
-	@Override
-	public void surfaceChanged(SurfaceHolder holder, int format, int width,
-			int height) {
+	
+	public SurfaceHolder getSurfaceHolder() {
+		return mHolder;
+	}
+	
+	public Camera getCamera() {
+		return mCamera;
+	}
+	
+	public void startPreview() {
+		mCamera = Camera.open();
+        
 		Camera.Parameters parameters = mCamera.getParameters();
-		parameters.setPreviewSize(width, height);
-		mCamera.setParameters(parameters);
-		mCamera.startPreview();
-	}
-
-	@Override
-	public void surfaceCreated(SurfaceHolder holder) {
-		releaseCamera();
-		if(mCamera == null) {
-			mCamera = Camera.open();
-		}
-		try {
-			mCamera.setPreviewDisplay(holder);
+		parameters.setPreviewFrameRate(30);
+        parameters.setPreviewSize(1280, 720);
+        mCamera.setParameters(parameters);
+        try {
+			mCamera.setPreviewDisplay(mHolder);
+			mCamera.startPreview();
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-
-	@Override
-	public void surfaceDestroyed(SurfaceHolder holder) {
-		if(mCamera != null) {
-			stopPreviewAndFreeCamera();
-		}
+	
+	public void stopPreview() {
+		if(mCamera != null)
+			mCamera.stopPreview();
+	}
+	
+	public void setCallback(Callback callback) {
+		mHolder = getHolder();
+		mHolder.addCallback(callback);
+		mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 	}
 	
 	private void releaseCamera() {
@@ -72,13 +67,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 	    }
 	}
 	
-	private void stopPreviewAndFreeCamera() {
-
+	public void stopPreviewAndFreeCamera() {
 	    if (mCamera != null) {
 	        mCamera.stopPreview();
 	        mCamera.release();
 	        mCamera = null;
 	    }
 	}
-	
 }
