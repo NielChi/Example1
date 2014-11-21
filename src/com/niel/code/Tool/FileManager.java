@@ -1,20 +1,15 @@
 package com.niel.code.Tool;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
 import android.content.Context;
 import android.media.ThumbnailUtils;
 import android.provider.MediaStore;
-import android.provider.MediaStore.Audio.Media;
 import android.util.Log;
 
-import com.niel.code.Util.FileControl;
 import com.niel.code.widget.VideoListStructure;
 
 public class FileManager {
@@ -151,7 +146,6 @@ public class FileManager {
 			VideoListStructure videoInfo = new VideoListStructure();
 			videoInfo.setVideoFileName(fileName);
 			videoInfo.setVideoName(videoName);
-			videoInfo.setScreenshot(ThumbnailUtils.createVideoThumbnail(path, MediaStore.Video.Thumbnails.MICRO_KIND));
 			videoInfo.setVideoPath("/sdcard"+path.split("/0")[1]);
 			videoInfo.deleteFile(false);
 			video.add(videoInfo);

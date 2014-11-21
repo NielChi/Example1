@@ -58,5 +58,6 @@ public class VideoListStructure {
 		this.mBitmap = null;
 		this.mVideoName = null;
 		this.mVideoFileName = null;
+		this.mVideoPath = null;
 	}
 }
