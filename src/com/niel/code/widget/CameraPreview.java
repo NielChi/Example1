@@ -34,7 +34,9 @@ public class CameraPreview extends SurfaceView {
 	}
 	
 	public void startPreview() {
-		mCamera = Camera.open();
+		if(mCamera == null) {
+			mCamera = Camera.open();
+		}
         
 		Camera.Parameters parameters = mCamera.getParameters();
 		parameters.setPreviewFrameRate(30);

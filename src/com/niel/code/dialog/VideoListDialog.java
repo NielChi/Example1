@@ -62,7 +62,12 @@ public class VideoListDialog extends Activity {
 	@Override
 	protected void onPause() {
 		super.onPause();
-		
+		if(mStatus != PlayStatus.STATUS_STOP) {
+			((VideoView) findViewById(R.id.videoView)).suspend();
+			((VideoView) findViewById(R.id.videoView)).stopPlayback();
+			mStatus = PlayStatus.STATUS_STOP;
+			((LinearLayout) findViewById(R.id.mediaControlView)).setVisibility(View.GONE);
+		}
 		((VideoListAdapter)(((ListView) findViewById(R.id.listView)).getAdapter())).releaseMemory();
 	}
 
@@ -107,11 +112,11 @@ public class VideoListDialog extends Activity {
 					if(mStatus == PlayStatus.STATUS_PLAY) {
 						mStatus = PlayStatus.STATUS_PAUSE;
 						((VideoView) findViewById(R.id.videoView)).pause();
-						((ImageButton) findViewById(R.id.videoPlayPause)).setImageResource(R.drawable.gtk_media_pause);
+						((ImageButton) findViewById(R.id.videoPlayPause)).setImageResource(R.drawable.gtk_media_play_ltr);
 					} else if(mStatus == PlayStatus.STATUS_PAUSE) {
 						mStatus = PlayStatus.STATUS_PLAY;
 						((VideoView) findViewById(R.id.videoView)).start();
-						((ImageButton) findViewById(R.id.videoPlayPause)).setImageResource(R.drawable.gtk_media_play_ltr);
+						((ImageButton) findViewById(R.id.videoPlayPause)).setImageResource(R.drawable.gtk_media_pause);
 					}
 				}
 				break;

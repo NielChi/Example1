@@ -48,8 +48,17 @@ public class Example extends Activity implements SurfaceHolder.Callback {
 	
 	@Override
 	protected void onStart() {
-		// TODO Auto-generated method stub
 		super.onStart();
+		new Handler().postDelayed(new Runnable() {
+			
+			@Override
+			public void run() {
+				((CameraPreview)findViewById(R.id.cameraPreview)).setCallback(mCallback);
+				((CameraPreview)findViewById(R.id.cameraPreview)).startPreview();
+				mCamera = ((CameraPreview)findViewById(R.id.cameraPreview)).getCamera();
+				((LinearLayout) findViewById(R.id.loadingProgress)).setVisibility(View.GONE);
+			}
+		}, 1000);
 	}
 	
 	@Override
@@ -64,25 +73,12 @@ public class Example extends Activity implements SurfaceHolder.Callback {
 		if(mStatus == RecordStatus.RECORD_STOP) {
 			((ImageView) findViewById(R.id.recordPrompt)).setVisibility(View.GONE);
 		}
-		new Handler().postDelayed(new Runnable() {
-			
-			@Override
-			public void run() {
-				((CameraPreview)findViewById(R.id.cameraPreview)).setCallback(mCallback);
-				((CameraPreview)findViewById(R.id.cameraPreview)).startPreview();
-				mCamera = ((CameraPreview)findViewById(R.id.cameraPreview)).getCamera();
-				((LinearLayout) findViewById(R.id.loadingProgress)).setVisibility(View.GONE);
-			}
-		}, 1000);
-		
 	}
 	
 	@Override
 	protected void onPause() {
 		if(mCamera != null) {
 			mCamera.stopPreview();
-			mCamera.release();
-			mCamera = null;
 		}
 		super.onPause();
 	}
@@ -95,7 +91,11 @@ public class Example extends Activity implements SurfaceHolder.Callback {
 
 	@Override
 	protected void onDestroy() {
-		// TODO Auto-generated method stub
+		if(mCamera != null) {
+			mCamera.unlock();
+			mCamera.release();
+			mCamera = null;
+		}
 		super.onDestroy();
 	}
 	

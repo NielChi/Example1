@@ -54,8 +54,10 @@ public class VideoListStructure {
 	}
 	
 	public void releaseMemory() {
-		this.mBitmap.recycle();
-		this.mBitmap = null;
+		if(this.mBitmap != null) {
+			this.mBitmap.recycle();
+			this.mBitmap = null;
+		}
 		this.mVideoName = null;
 		this.mVideoFileName = null;
 		this.mVideoPath = null;
