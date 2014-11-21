@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PackageAnalysis>
+    <Package name="com.niel.code.dialog" x="656" y="605">
+        <DependencyLink destination="com.niel.code.widget"/>
+        <DependencyLink destination="com.niel.code.Tool"/>
+        <DependencyLink destination="com.niel.code.example"/>
+    </Package>
+    <Package name="com.niel.code.example" x="397" y="498">
+        <DependencyLink destination="com.niel.code.widget">
+            <Point x="492" y="390"/>
+        </DependencyLink>
+        <DependencyLink destination="com.niel.code.dialog">
+            <Point x="492" y="617"/>
+        </DependencyLink>
+        <DependencyLink destination="com.niel.code.media"/>
+    </Package>
+    <Package name="com.niel.code.media" x="251" y="374">
+        <DependencyLink destination="com.niel.code.Util"/>
+    </Package>
+    <Package name="com.niel.code.Tool" x="894" y="503">
+        <DependencyLink destination="com.niel.code.widget"/>
+    </Package>
+    <Package name="com.niel.code.Util" x="459" y="276"/>
+    <Package name="com.niel.code.widget" x="654" y="378">
+        <DependencyLink destination="com.niel.code.example"/>
+    </Package>
+</PackageAnalysis>
