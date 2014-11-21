@@ -2,10 +2,12 @@ package com.niel.code.widget;
 
 import java.util.ArrayList;
 
-import com.niel.code.example.R;
-
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.media.ThumbnailUtils;
+import android.os.AsyncTask;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +18,8 @@ import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.niel.code.example.R;
 
 public class VideoListAdapter extends BaseAdapter {
 	
@@ -30,6 +34,7 @@ public class VideoListAdapter extends BaseAdapter {
 	public VideoListAdapter(Context context, ArrayList<VideoListStructure> sturcture) {
 		mContext = context;
 		item = (ArrayList<VideoListStructure>) sturcture.clone();
+		getScreenshot();
 	}
 	
 	public void setAdapterItem(ArrayList<VideoListStructure> sturcture) {
@@ -38,8 +43,15 @@ public class VideoListAdapter extends BaseAdapter {
 				item.clear();
 			}
 			item = (ArrayList<VideoListStructure>) sturcture.clone();
-			Log.d(TAG,"item size "+item.size());
-			notifyDataSetChanged();
+			getScreenshot();
+		}
+	}
+	
+	private void getScreenshot() {
+		for(int i = 0; i < item.size(); i++) {
+			if(item.get(i).getScreenshot() == null) {
+				new CaptureScreenshot().execute(item.get(i).getVideoPath(), String.valueOf(i));
+			}
 		}
 	}
 
@@ -98,4 +110,28 @@ public class VideoListAdapter extends BaseAdapter {
 		return view;
 	}
 	
+	public void releaseMemory() {
+		for(VideoListStructure structure : item) {
+			structure.releaseMemory();
+		}
+	}
+	
+	private class CaptureScreenshot extends AsyncTask<String, Void, Bitmap> {
+		
+		int index = 0;
+		
+		@Override
+		protected Bitmap doInBackground(String... params) {
+			index = Integer.valueOf(params[1]);
+			return ThumbnailUtils.createVideoThumbnail(params[0], MediaStore.Video.Thumbnails.MICRO_KIND);
+		}
+
+		@Override
+		protected void onPostExecute(Bitmap bitmap) {
+			item.get(index).setScreenshot(bitmap);
+			notifyDataSetChanged();
+			super.onPostExecute(bitmap);
+		}
+		
+	}
 }

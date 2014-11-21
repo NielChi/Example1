@@ -1,9 +1,7 @@
 package com.niel.code.dialog;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import android.app.Activity;
 import android.content.Context;
@@ -12,15 +10,17 @@ import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnPreparedListener;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.MediaController;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.VideoView;
 
 import com.niel.code.Tool.FileManager;
@@ -30,16 +30,20 @@ import com.niel.code.widget.VideoListStructure;
 
 public class VideoListDialog extends Activity {
 	private final String TAG = "Video"; 
+	private final int DELAYTIME = 1000;
 	private Context mContext;
 	
-	private ArrayList<HashMap<String, String>> mVideoList;
-	private VideoView mVideo;
+	private PlayStatus mStatus;
+	enum PlayStatus {
+		STATUS_IDEL, STATUS_PREPARED, STATUS_PLAY, STATUS_PAUSE, STATUS_STOP
+	}
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		mContext = getApplicationContext();
+		mStatus = PlayStatus.STATUS_IDEL;
 	}
 	
 	@Override
@@ -47,30 +51,25 @@ public class VideoListDialog extends Activity {
 		super.onResume();
 		setContentView(R.layout.video_list_dialog);
 		((Button) findViewById(R.id.closeButton)).setOnClickListener(onClick);
-		mVideoList = FileManager.getMP4List(Environment.getExternalStorageDirectory()+"/Video");
-		for(HashMap<String, String> map : mVideoList) {
-			Log.d(TAG,"name "+map.get("name")+" path "+map.get("path"));
-		}
-		
+		((ImageButton) findViewById(R.id.videoPlayPause)).setOnClickListener(onClick);
 		ArrayList<VideoListStructure> list = FileManager.getList(Environment.getExternalStorageDirectory()+"/Video");
-		Log.d(TAG,"list size "+list.size());
 		((ListView) findViewById(R.id.listView)).setAdapter(new VideoListAdapter(mContext, list));
 		((ListView) findViewById(R.id.listView)).setOnItemClickListener(onItemClick);
 		((VideoListAdapter)(((ListView) findViewById(R.id.listView)).getAdapter())).setAdapterItem(list);
+		((LinearLayout) findViewById(R.id.mediaControlView)).setVisibility(View.GONE);
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
+		
+		((VideoListAdapter)(((ListView) findViewById(R.id.listView)).getAdapter())).releaseMemory();
 	}
 
 	@Override
 	public void onBackPressed() {
 		for(int i = 0; i < ((VideoListAdapter)(((ListView) findViewById(R.id.listView)).getAdapter())).getCount(); i++) {
 			if(((VideoListStructure)((VideoListAdapter)(((ListView) findViewById(R.id.listView)).getAdapter())).getItem(i)).isDetele()) {
-				Log.d(TAG,"remove file "+((VideoListStructure)((VideoListAdapter)(((ListView) findViewById(R.id.listView)).getAdapter())).getItem(i)).getVideoFileName()
-						+" "+((VideoListStructure)((VideoListAdapter)(((ListView) findViewById(R.id.listView)).getAdapter())).getItem(i)).getVideoName()
-						+" "+((VideoListStructure)((VideoListAdapter)(((ListView) findViewById(R.id.listView)).getAdapter())).getItem(i)).getVideoPath());
 				File file = new File((((VideoListStructure)((VideoListAdapter)(((ListView) findViewById(R.id.listView)).getAdapter())).getItem(i)).getVideoPath().split("\\.")[0])+".mp4");
 				if(file.exists()) {
 					file.delete();
@@ -79,12 +78,22 @@ public class VideoListDialog extends Activity {
 				if(file.exists()) {
 					file.delete();
 				}
-               
+				((VideoListStructure)((VideoListAdapter)(((ListView) findViewById(R.id.listView)).getAdapter())).getItem(i)).releaseMemory();
 			}
 		}
 		super.onBackPressed();
 	}
 	
+	public Runnable onProgress = new Runnable() {
+		
+		@Override
+		public void run() {
+			if( (mStatus != PlayStatus.STATUS_IDEL) && (mStatus != PlayStatus.STATUS_STOP) ){
+				setCurrentPosition();
+			}
+		}
+	}; 
+
 	private OnClickListener onClick = new OnClickListener() {
 		
 		@Override
@@ -92,6 +101,19 @@ public class VideoListDialog extends Activity {
 			switch(v.getId()) {
 			case R.id.closeButton:
 				onBackPressed();
+				break;
+			case R.id.videoPlayPause:
+				if( (mStatus != PlayStatus.STATUS_IDEL) && (mStatus != PlayStatus.STATUS_STOP) ){
+					if(mStatus == PlayStatus.STATUS_PLAY) {
+						mStatus = PlayStatus.STATUS_PAUSE;
+						((VideoView) findViewById(R.id.videoView)).pause();
+						((ImageButton) findViewById(R.id.videoPlayPause)).setImageResource(R.drawable.gtk_media_pause);
+					} else if(mStatus == PlayStatus.STATUS_PAUSE) {
+						mStatus = PlayStatus.STATUS_PLAY;
+						((VideoView) findViewById(R.id.videoView)).start();
+						((ImageButton) findViewById(R.id.videoPlayPause)).setImageResource(R.drawable.gtk_media_play_ltr);
+					}
+				}
 				break;
 			}
 		}
@@ -102,21 +124,20 @@ public class VideoListDialog extends Activity {
 		@Override
 		public void onItemClick(AdapterView<?> adapter, View view, int position,
 				long id) {
-			// play media
-			Log.d(TAG,"HIHIHIHIHIHIHIHIHIHI "+(((VideoListStructure)((VideoListAdapter)(((ListView) findViewById(R.id.listView)).getAdapter())).getItem(position)).getVideoPath().split("\\.")[0])+".mp4");
 			((VideoView) findViewById(R.id.videoView)).setVideoPath((((VideoListStructure)((VideoListAdapter)(((ListView) findViewById(R.id.listView)).getAdapter())).getItem(position)).getVideoPath().split("\\.")[0])+".mp4");
-			((VideoView) findViewById(R.id.videoView)).requestFocus();
+			((VideoView) findViewById(R.id.videoView)).setVisibility(View.VISIBLE);
 			((VideoView) findViewById(R.id.videoView)).setOnPreparedListener(new OnPreparedListener() {
 				
 				@Override
 				public void onPrepared(MediaPlayer mp) {
-					
+					setVideoDuration(mp.getDuration());
 				}
 			});
-			((VideoView) findViewById(R.id.videoView)).setVisibility(View.VISIBLE);
 			((VideoView) findViewById(R.id.videoView)).start();
+			mStatus = PlayStatus.STATUS_PLAY;
 			((ListView) findViewById(R.id.listView)).setVisibility(View.GONE);
 			((Button) findViewById(R.id.closeButton)).setVisibility(View.GONE);
+			((LinearLayout) findViewById(R.id.mediaControlView)).setVisibility(View.VISIBLE);
 			((VideoView) findViewById(R.id.videoView)).setOnCompletionListener(new OnCompletionListener() {
 				
 				@Override
@@ -125,9 +146,35 @@ public class VideoListDialog extends Activity {
 					((VideoView) findViewById(R.id.videoView)).stopPlayback();
 					((ListView) findViewById(R.id.listView)).setVisibility(View.VISIBLE);
 					((Button) findViewById(R.id.closeButton)).setVisibility(View.VISIBLE);
+					mStatus = PlayStatus.STATUS_STOP;
+					((LinearLayout) findViewById(R.id.mediaControlView)).setVisibility(View.GONE);
+					((ProgressBar) findViewById(R.id.videoProgress)).removeCallbacks(onProgress);
 				}
 			});
 		}
 	};
+	
+	private void setVideoDuration(int duration) {
+		int durationTime = duration / 1000;
+		int mm = durationTime / 60;
+		int hh = mm / 60;
+		int ss = durationTime % 60;
+		mm %= 60;
+		((TextView) findViewById(R.id.videoTotalTime)).setText(String.format("%02d:%02d:%02d", hh,mm,ss));
+		((ProgressBar) findViewById(R.id.videoProgress)).setMax(durationTime);
+		((ProgressBar) findViewById(R.id.videoProgress)).setProgress(0);
+		((ProgressBar) findViewById(R.id.videoProgress)).postDelayed(onProgress, DELAYTIME);
+	}
+	
+	private void setCurrentPosition() {
+		int currentTime = ((VideoView) findViewById(R.id.videoView)).getCurrentPosition() / 1000;
+		int mm = currentTime / 60;
+		int hh = mm / 60;
+		int ss = currentTime % 60;
+		mm %= 60;
+		((TextView) findViewById(R.id.videoTime)).setText(String.format("%02d:%02d:%02d", hh,mm,ss));
+		((ProgressBar) findViewById(R.id.videoProgress)).setProgress(currentTime);
+		((ProgressBar) findViewById(R.id.videoProgress)).postDelayed(onProgress, DELAYTIME);
+	}
 	
 }
