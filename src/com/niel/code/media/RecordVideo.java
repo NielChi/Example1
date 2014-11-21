@@ -52,6 +52,7 @@ public class RecordVideo {
 			this.mRecorder.reset();
 			this.mRecorder.release();
 			writeData("End Time : "+timeStamp2Date(String.valueOf(System.currentTimeMillis())));
+			writeData("File Name : "+fileName);
 		}
 	}
 	
