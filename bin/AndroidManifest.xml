@@ -8,6 +8,9 @@
         android:targetSdkVersion="10" />
     
     <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
 
     <application
         android:allowBackup="true"
@@ -23,6 +26,11 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity 
+            android:name="com.niel.code.dialog.VideoListDialog"
+            android:screenOrientation="sensorLandscape"
+            android:theme="@style/AppTheme">
         </activity>
     </application>
 
